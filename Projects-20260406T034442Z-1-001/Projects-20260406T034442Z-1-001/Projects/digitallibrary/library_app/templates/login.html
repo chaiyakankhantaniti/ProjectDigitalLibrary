@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}เข้าสู่ระบบ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3 py-md-5">
+    <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow-lg overflow-hidden">
+            <div class="card-header text-white text-center py-4 border-0" style="background: #1E293B;">
+                <h1 class="h4 mb-0"><i class="fas fa-right-to-bracket me-2"></i>เข้าสู่ระบบ</h1>
+                <p class="small mb-0 mt-2 opacity-75">นักเรียนสมัครเองได้ — ครู/บรรณารักษ์ใช้บัญชีที่แอดมินสร้างให้</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="post" action="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" novalidate>
+                    {% csrf_token %}
+                    {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="id_username">ชื่อผู้ใช้</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-primary"></i></span>
+                            <input type="text" name="username" id="id_username" class="form-control border-start-0" placeholder="username" required autofocus autocomplete="username">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="id_password">รหัสผ่าน</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-primary"></i></span>
+                            <input type="password" name="password" id="id_password" class="form-control border-start-0" placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dl-primary w-100 py-2 rounded-pill fw-bold shadow-sm">
+                        เข้าสู่ระบบ
+                    </button>
+                </form>
+                <p class="text-center text-muted small mt-4 mb-0">
+                    ยังไม่มีบัญชี? <a href="{% url 'register' %}" class="fw-semibold">สมัครสมาชิกนักเรียน</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

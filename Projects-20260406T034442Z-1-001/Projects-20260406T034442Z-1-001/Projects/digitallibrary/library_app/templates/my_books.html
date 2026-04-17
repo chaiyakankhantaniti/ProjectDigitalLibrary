@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}หนังสือของฉัน{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 animate-fade-in">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1"><i class="fas fa-book-bookmark me-2"></i>หนังสือของฉัน</h1>
+        <p class="text-secondary mb-0 small">หนังสือที่กำลังยืม — เปิดอ่าน e-book หรือแจ้งคืนเมื่ออ่านจบ</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'index' %}" class="btn btn-outline-primary rounded-pill"><i class="fas fa-magnifying-glass me-1"></i>ค้นหาหนังสือ</a>
+        <a href="{% url 'borrow_history' %}" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-clock-rotate-left me-1"></i>ประวัติทั้งหมด</a>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+    {% for b in borrows %}
+        <div class="col">
+            <article class="card h-100 border-0 shadow-sm card-my-book overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-4 col-sm-3">
+                        {% if b.book.cover_image %}
+                            <img src="{{ b.book.cover_image.url }}" class="img-fluid h-100 w-100 object-fit-cover" alt="" style="min-height:140px;">
+                        {% else %}
+                            <div class="bg-light h-100 d-flex align-items-center justify-content-center text-muted" style="min-height:140px;">
+                                <i class="fas fa-book fa-2x opacity-50"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-8 col-sm-9">
+                        <div class="card-body d-flex flex-column h-100 py-3">
+                            <h2 class="h6 fw-bold text-primary mb-1">{{ b.book.title }}</h2>
+                            <p class="small text-muted mb-2">{% if b.book.category %}{{ b.book.category.name }}{% else %}ไม่ระบุหมวด{% endif %}</p>
+                            <p class="small mb-2">
+                                ยืม {{ b.borrow_date|date:"d/m/Y" }} · คืนก่อน <strong>{{ b.due_date|date:"d/m/Y" }}</strong>
+                            </p>
+                            <div class="mt-auto d-flex flex-wrap gap-2">
+                                {% if b.book.ebook_pdf or b.book.ebook_text %}
+                                    <a href="{% url 'ebook_reader' b.book.id %}" class="btn btn-dl-primary btn-sm rounded-pill">
+                                        <i class="fas fa-tablet-screen-button me-1"></i>อ่าน e-book
+                                    </a>
+                                {% else %}
+                                    <span class="badge text-bg-light text-muted align-self-center">ยังไม่มี e-book</span>
+                                {% endif %}
+                                <form action="{% url 'return_my_borrow' b.id %}" method="post" class="d-inline" onsubmit="return confirm('ยืนยันแจ้งคืนหนังสือเล่มนี้?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-success btn-sm rounded-pill">
+                                        <i class="fas fa-check me-1"></i>แจ้งคืน
+                                    </button>
+                                </form>
+                            </div>
+                            {% if b.status == 'overdue' %}
+                                <span class="badge text-bg-danger mt-2 align-self-start"><i class="fas fa-triangle-exclamation me-1"></i>เลยกำหนดคืน</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-light border text-center py-5 rounded-4 shadow-sm">
+                <i class="fas fa-book-open fa-2x text-primary mb-3 d-block animate-float"></i>
+                <p class="mb-3 text-secondary">ยังไม่มีหนังสือที่กำลังยืม — ไปเลือกหนังสือแล้วกดยืมได้เลย</p>
+                <a href="{% url 'index' %}" class="btn btn-dl-primary rounded-pill px-4">ไปหน้าค้นหาหนังสือ</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

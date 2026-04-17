@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}ลบหนังสือ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg animate-fade-in">
+            <div class="card-body p-4 p-md-5 text-center">
+                <i class="fas fa-triangle-exclamation fa-3x text-danger mb-3 d-block"></i>
+                <h1 class="h4 fw-bold mb-3">ยืนยันการลบหนังสือ</h1>
+                <p class="text-secondary mb-4">คุณกำลังจะลบ <strong>«{{ book.title }}»</strong> ออกจากระบบ การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+                {% if has_active_borrow %}
+                    <div class="alert alert-danger text-start">ไม่สามารถลบได้ขณะมีผู้ยืมเล่มนี้อยู่ — กรุณารับคืนหนังสือก่อน</div>
+                    <a href="{% url 'librarian_book_list' %}" class="btn btn-outline-secondary rounded-pill">กลับ</a>
+                {% else %}
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 me-2">ลบหนังสือ</button>
+                        <a href="{% url 'librarian_book_list' %}" class="btn btn-outline-secondary rounded-pill px-4">ยกเลิก</a>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

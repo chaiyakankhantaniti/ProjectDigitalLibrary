@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title_label }}{% endblock %}
+
+{% block content %}
+<div class="mb-3 animate-fade-in">
+    <a href="{% url 'librarian_book_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fas fa-arrow-left me-1"></i>กลับรายการ</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-8">
+        <div class="card border-0 shadow-lg overflow-hidden animate-fade-in">
+            <div class="card-header text-white py-3 border-0" style="background: #1E293B;">
+                <h1 class="h5 mb-0"><i class="fas fa-pen-to-square me-2"></i>{{ title_label }}</h1>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.title.id_for_label }}">ชื่อหนังสือ</label>
+                        {{ form.title }}
+                        {{ form.title.errors }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.description.id_for_label }}">รายละเอียด</label>
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="{{ form.learning_area.id_for_label }}">กลุ่มสาระการเรียนรู้</label>
+                            {{ form.learning_area }}
+                            {{ form.learning_area.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="{{ form.grade_level.id_for_label }}">ระดับชั้นที่เหมาะสม</label>
+                            {{ form.grade_level }}
+                            {{ form.grade_level.errors }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="{{ form.category.id_for_label }}">หมวดหมู่ (เพิ่มเติม)</label>
+                            {{ form.category }}
+                            {{ form.category.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="{{ form.authors.id_for_label }}">ผู้แต่ง (กด Ctrl เลือกหลายคน)</label>
+                            {{ form.authors }}
+                            {{ form.authors.errors }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.cover_image.id_for_label }}">ภาพปก</label>
+                        {{ form.cover_image }}
+                        {{ form.cover_image.errors }}
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="{{ form.total_copies.id_for_label }}">จำนวนเล่มทั้งหมด</label>
+                            {{ form.total_copies }}
+                            {{ form.total_copies.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" for="{{ form.available_copies.id_for_label }}">พร้อมยืม</label>
+                            {{ form.available_copies }}
+                            {{ form.available_copies.errors }}
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <h2 class="h6 fw-bold text-primary mb-3"><i class="fas fa-tablet-screen-button me-2"></i>e-book สำหรับตัวอ่าน</h2>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.ebook_pdf.id_for_label }}">ไฟล์ PDF (ถ้ามี)</label>
+                        {{ form.ebook_pdf }}
+                        {{ form.ebook_pdf.errors }}
+                        {% if book and book.ebook_pdf %}
+                            <p class="small text-muted mb-0 mt-1">ไฟล์ปัจจุบัน: {{ book.ebook_pdf.name }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="{{ form.ebook_text.id_for_label }}">เนื้อหาข้อความ</label>
+                        <p class="small text-muted">แบ่งหน้าด้วยบรรทัด <code>&lt;&lt;&lt;PAGE&gt;&gt;&gt;</code> หากไม่มี PDF</p>
+                        {{ form.ebook_text }}
+                        {{ form.ebook_text.errors }}
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-dl-primary rounded-pill px-4">บันทึก</button>
+                        <a href="{% url 'librarian_book_list' %}" class="btn btn-outline-secondary rounded-pill px-4">ยกเลิก</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

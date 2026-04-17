@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}จัดการหนังสือ{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 animate-fade-in">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1"><i class="fas fa-book-open me-2"></i>จัดการหนังสือ</h1>
+        <p class="text-secondary mb-0 small">เพิ่ม แก้ไข ลบ และอัปโหลด e-book สำหรับนักเรียน/ครู</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'librarian_category_list' %}" class="btn btn-outline-primary rounded-pill px-3"><i class="fas fa-tags me-1"></i>หมวดหมู่หนังสือ</a>
+        <a href="{% url 'librarian_book_create' %}" class="btn btn-dl-primary rounded-pill px-4"><i class="fas fa-plus me-1"></i>เพิ่มหนังสือ</a>
+    </div>
+</div>
+
+<form class="card border-0 shadow-sm p-3 mb-4 bg-white" method="get" action="{% url 'librarian_book_list' %}">
+    <label class="form-label fw-semibold" for="qb"><i class="fas fa-magnifying-glass text-primary me-1"></i>ค้นหาหนังสือ</label>
+    <div class="input-group">
+        <input type="search" class="form-control" name="q" id="qb" value="{{ search_query }}" placeholder="ชื่อหนังสือ, หมวด, คำอธิบาย...">
+        <button class="btn btn-dl-primary" type="submit">ค้นหา</button>
+    </div>
+    {% if search_query %}
+        <p class="small text-muted mt-2 mb-0">ผลค้นหา: <strong>{{ search_query }}</strong> — <a href="{% url 'librarian_book_list' %}">ล้าง</a></p>
+    {% endif %}
+</form>
+
+<div class="table-responsive shadow-sm rounded-3 border bg-white">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>ชื่อหนังสือ</th>
+                <th>สาระ / ชั้น</th>
+                <th>หมวดเพิ่มเติม</th>
+                <th>สต็อก</th>
+                <th>e-book</th>
+                <th class="text-end">จัดการ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+                <tr>
+                    <td class="fw-semibold">{{ book.title }}</td>
+                    <td class="small">
+                        <span class="d-block text-muted">{{ book.get_learning_area_display }}</span>
+                        <span class="badge text-bg-light border">{{ book.get_grade_level_display }}</span>
+                    </td>
+                    <td class="small text-muted">{% if book.category %}{{ book.category.name }}{% else %}—{% endif %}</td>
+                    <td class="small">{{ book.available_copies }} / {{ book.total_copies }}</td>
+                    <td class="small">
+                        {% if book.ebook_pdf %}
+                            <span class="badge text-bg-primary">PDF</span>
+                        {% elif book.ebook_text %}
+                            <span class="badge text-bg-info text-dark">ข้อความ</span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        {% if book.ebook_pdf or book.ebook_text %}
+                            <a href="{% url 'ebook_reader' book.id %}" class="btn btn-outline-primary btn-sm rounded-pill me-1" title="ดูตัวอย่าง">อ่าน</a>
+                        {% endif %}
+                        <a href="{% url 'librarian_book_edit' book.id %}" class="btn btn-outline-secondary btn-sm rounded-pill me-1">แก้ไข</a>
+                        <a href="{% url 'librarian_book_delete' book.id %}" class="btn btn-outline-danger btn-sm rounded-pill">ลบ</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-5">ไม่มีหนังสือ — <a href="{% url 'librarian_book_create' %}">เพิ่มเล่มแรก</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

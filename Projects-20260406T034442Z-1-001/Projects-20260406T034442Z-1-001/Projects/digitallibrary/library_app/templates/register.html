@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}สมัครสมาชิก — นักเรียน{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3 py-md-5">
+    <div class="col-12 col-md-10 col-lg-7 col-xl-6">
+        <div class="card border-0 shadow-lg overflow-hidden rounded-4">
+            <div class="card-header text-white text-center py-4 border-0 kid-register-header">
+                <h1 class="h4 mb-0 fw-bold"><i class="fas fa-child me-2"></i>สมัครสมาชิกนักเรียน</h1>
+                <p class="small mb-0 mt-2 opacity-90">กรอกข้อมูลให้ครบ — สำหรับนักเรียนเท่านั้นนะ</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <div class="alert alert-info border-0 rounded-3 small mb-4">
+                    <i class="fas fa-circle-info me-1"></i>
+                    ครูและบรรณารักษ์ไม่สมัครที่หน้านี้ — บัญชีจะถูกสร้างโดยผู้ดูแลระบบ (แอดมิน) ให้จากหลังบ้าน
+                </div>
+                <form method="post" action="{% url 'register' %}" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-3">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                            {{ form.first_name }}
+                            {{ form.first_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                            {{ form.last_name }}
+                            {{ form.last_name.errors }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="{{ form.student_id.id_for_label }}">{{ form.student_id.label }}</label>
+                        {{ form.student_id }}
+                        {% if form.student_id.errors %}<div class="text-danger small mt-1">{{ form.student_id.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="{{ form.grade_level.id_for_label }}">{{ form.grade_level.label }}</label>
+                        {{ form.grade_level }}
+                        {% if form.grade_level.errors %}<div class="text-danger small mt-1">{{ form.grade_level.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="{{ form.password1.id_for_label }}">รหัสผ่าน</label>
+                        <div class="input-group">
+                            {{ form.password1 }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('{{ form.password1.id_for_label }}', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password1.help_text %}<div class="form-text">{{ form.password1.help_text }}</div>{% endif %}
+                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold" for="{{ form.password2.id_for_label }}">ยืนยันรหัสผ่าน</label>
+                        <div class="input-group">
+                            {{ form.password2 }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('{{ form.password2.id_for_label }}', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors }}</div>{% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-dl-primary btn-lg w-100 fw-bold rounded-pill py-3 shadow">
+                        สมัครเลย!
+                    </button>
+                </form>
+                <p class="text-center text-muted small mt-3 mb-0">
+                    <a href="{% url 'password_reset' %}" class="fw-bold text-secondary">ลืมรหัสผ่าน?</a>
+                </p>
+                <p class="text-center text-muted small mt-2 mb-0">
+                    มีบัญชีแล้ว? <a href="{% url 'login' %}" class="fw-bold">เข้าสู่ระบบ</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
+{% endblock %}

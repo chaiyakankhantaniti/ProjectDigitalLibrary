@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}อ่าน — {{ book.title }}{% endblock %}
+
+{% block main_extra_class %}py-0 ebook-reader-main{% endblock %}
+
+{% block extra_css %}
+<style>
+  main.ebook-reader-main {
+    max-width: 100% !important;
+    width: 100%;
+  }
+  .ebook-shell { min-height: calc(100vh - 5rem); }
+  .ebook-toolbar {
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.94);
+    border: 1px solid #CBD5E1;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
+  }
+  .ebook-stage {
+    background: linear-gradient(180deg, #DBEAFE 0%, #F8FAFF 45%, #fff 100%);
+    border-radius: 1.25rem;
+    border: 1px solid #CBD5E1;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+    min-height: min(72vh, calc(100vh - 12rem));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .ebook-stage:fullscreen {
+    min-height: 100vh;
+    border-radius: 0;
+    padding: 0.75rem !important;
+    background: #2d2d2d;
+  }
+  .ebook-stage:fullscreen .ebook-canvas-wrap {
+    max-height: calc(100vh - 5rem);
+    flex: 1;
+  }
+  .ebook-canvas-wrap {
+    overflow: auto;
+    width: 100%;
+    max-height: min(68vh, calc(100dvh - 14rem));
+    border-radius: 0.75rem;
+    background: #4a4f54;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    transition: min-height 0.2s ease;
+  }
+  .ebook-canvas-wrap.pdf-page-landscape {
+    align-items: center;
+    justify-content: center;
+  }
+  #pdf-canvas {
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    border-radius: 2px;
+    max-width: 100%;
+    height: auto;
+  }
+  .text-page-sheet {
+    transform-origin: top center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 18px 45px rgba(59, 130, 246, 0.12);
+    border-radius: 0.5rem 0.75rem 0.75rem 0.5rem;
+    background: linear-gradient(90deg, #F8FAFF 0%, #ffffff 8%, #fff 50%, #ffffff 92%, #F8FAFF 100%);
+    border-left: 4px solid rgba(59, 130, 246, 0.3);
+    min-height: min(60vh, 32rem);
+    width: 100%;
+    max-width: min(42rem, 96vw);
+  }
+  #text-pages {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    min-height: 50vh;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="ebook-fs-root" class="ebook-shell animate-fade-in px-2 px-md-3 py-3">
+    {% if preview_mode %}
+        <div class="alert alert-info border-0 shadow-sm mb-3 py-3 d-flex flex-wrap align-items-center gap-2 justify-content-between">
+            <span><i class="fas fa-book-open me-2"></i>โหมดทดลองอ่าน — ดูได้เฉพาะ <strong>{{ max_preview_pages }} หน้าแรก</strong> ยืมหนังสือเพื่ออ่านต่อ</span>
+            <a href="{% url 'book_detail' book.id %}" class="btn btn-sm btn-primary rounded-pill">กลับไปยืมหนังสือ</a>
+        </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div>
+            {% if show_my_books_link %}
+                <a href="{% url 'my_books' %}" class="btn btn-outline-secondary btn-sm rounded-pill me-2"><i class="fas fa-book-bookmark me-1"></i>หนังสือของฉัน</a>
+            {% endif %}
+            <a href="{% url 'book_detail' book.id %}" class="btn btn-outline-primary btn-sm rounded-pill"><i class="fas fa-circle-info me-1"></i>รายละเอียดหนังสือ</a>
+        </div>
+        <h1 class="h5 fw-bold text-primary mb-0 text-truncate text-end flex-grow-1" style="max-width: min(100%, 28rem);">{{ book.title }}</h1>
+    </div>
+
+    <div class="ebook-toolbar p-3 p-md-4 mb-3">
+        <div class="row g-3 align-items-center">
+            <div class="col-xl-5">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    {% if mode == 'pdf' %}
+                        <button type="button" class="btn btn-dl-primary rounded-pill btn-sm" id="btn-prev" aria-label="หน้าก่อน"><i class="fas fa-chevron-left"></i></button>
+                        <span class="fw-semibold px-2"><span id="page-num">1</span> / <span id="page-count">—</span></span>
+                        <button type="button" class="btn btn-dl-primary rounded-pill btn-sm" id="btn-next" aria-label="หน้าถัดไป"><i class="fas fa-chevron-right"></i></button>
+                        <span class="small text-muted d-none d-md-inline" id="pdf-total-hint"></span>
+                    {% else %}
+                        <button type="button" class="btn btn-dl-primary rounded-pill btn-sm" id="text-prev"><i class="fas fa-chevron-left me-1"></i>หน้าก่อน</button>
+                        <span class="fw-semibold px-2"><span id="text-page-num">1</span> / <span id="text-page-count">{{ pages|length }}</span></span>
+                        <button type="button" class="btn btn-dl-primary rounded-pill btn-sm" id="text-next">หน้าถัดไป<i class="fas fa-chevron-right ms-1"></i></button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-xl-end">
+                    <button type="button" class="btn btn-outline-dark btn-sm rounded-pill" id="btn-fullscreen" title="เต็มจอ">
+                        <i class="fas fa-expand me-1"></i><span class="d-none d-sm-inline">เต็มจอ</span>
+                    </button>
+                    <span class="small text-muted me-1 d-none d-sm-inline">ซูม</span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" id="zoom-out" title="ย่อ">−</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" id="zoom-reset" title="พอดีหน้าจอ">พอดีจอ</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" id="zoom-in" title="ขยาย">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ebook-stage p-2 p-md-4" id="ebook-stage">
+        {% if mode == 'pdf' %}
+            <div class="ebook-canvas-wrap" id="pdf-scroll">
+                <canvas id="pdf-canvas" class="animate-scale-in"></canvas>
+            </div>
+            <p class="small text-muted text-center mt-3 mb-0" id="pdf-status">กำลังโหลดไฟล์…</p>
+        {% else %}
+            <div id="text-pages" class="position-relative py-2">
+                {% for page in pages %}
+                    <div class="text-page text-page-sheet p-4 p-md-5 mx-auto mb-0 d-none" data-text-page="{{ forloop.counter }}">
+                        <div class="small text-muted mb-3 border-bottom pb-2">หน้า {{ forloop.counter }} / {{ pages|length }}</div>
+                        <div class="ebook-text-body lh-lg" style="font-family: 'Sarabun', 'Kanit', serif; font-size: 1.05rem;">{{ page|linebreaks }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if mode == 'pdf' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+  var pdfUrl = "{{ pdf_url|escapejs }}";
+  var previewMode = {% if preview_mode %}true{% else %}false{% endif %};
+  var maxPreviewPages = {{ max_preview_pages }};
+  var pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+  if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  var pdfDoc = null;
+  var pageNum = 1;
+  var userZoomMul = 1;
+  var canvas = document.getElementById('pdf-canvas');
+  var ctx = canvas.getContext('2d');
+  var statusEl = document.getElementById('pdf-status');
+  var wrap = document.getElementById('pdf-scroll');
+
+  function pageCap() {
+    if (!pdfDoc) return 1;
+    if (previewMode) return Math.min(maxPreviewPages, pdfDoc.numPages);
+    return pdfDoc.numPages;
+  }
+
+  function computeFitScale(page) {
+    var cw = wrap.clientWidth - 8;
+    var ch = wrap.clientHeight - 8;
+    if (cw < 80) cw = 320;
+    if (ch < 80) ch = 400;
+    var base = page.getViewport({ scale: 1 });
+    var rw = cw / base.width;
+    var rh = ch / base.height;
+    return Math.min(rw, rh) * 0.98;
+  }
+
+  function renderPage(num) {
+    if (!pdfDoc) return;
+    var cap = pageCap();
+    if (num > cap) num = cap;
+    if (num < 1) num = 1;
+    pageNum = num;
+    pdfDoc.getPage(pageNum).then(function (page) {
+      var fit = computeFitScale(page);
+      var scale = fit * userZoomMul;
+      var viewport = page.getViewport({ scale: scale });
+      var base = page.getViewport({ scale: 1 });
+      wrap.classList.toggle('pdf-page-landscape', base.width > base.height);
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      var renderContext = { canvasContext: ctx, viewport: viewport };
+      return page.render(renderContext).promise;
+    }).then(function () {
+      document.getElementById('page-num').textContent = pageNum;
+      document.getElementById('page-count').textContent = pageCap();
+      var hint = document.getElementById('pdf-total-hint');
+      if (hint && pdfDoc && previewMode && pdfDoc.numPages > maxPreviewPages) {
+        hint.textContent = '(ทั้งเล่ม ' + pdfDoc.numPages + ' หน้า — ทดลอง ' + maxPreviewPages + ' หน้า)';
+        hint.classList.remove('d-none');
+      }
+      var nextBtn = document.getElementById('btn-next');
+      var prevBtn = document.getElementById('btn-prev');
+      if (nextBtn) nextBtn.disabled = pageNum >= pageCap();
+      if (prevBtn) prevBtn.disabled = pageNum <= 1;
+    }).catch(function () {
+      if (statusEl) statusEl.textContent = 'ไม่สามารถแสดงหน้านี้ได้';
+    });
+  }
+
+  function queueRender(num) {
+    if (!pdfDoc) return;
+    var cap = pageCap();
+    if (num < 1 || num > cap) return;
+    renderPage(num);
+  }
+
+  if (pdfjsLib) {
+    pdfjsLib.getDocument({ url: pdfUrl, withCredentials: true }).promise.then(function (doc) {
+      pdfDoc = doc;
+      if (statusEl) statusEl.textContent = '';
+      renderPage(1);
+    }).catch(function () {
+      if (statusEl) statusEl.textContent = 'โหลด PDF ไม่สำเร็จ — ลองรีเฟรชหรือตรวจสอบการเข้าสู่ระบบ';
+    });
+  } else if (statusEl) {
+    statusEl.textContent = 'เบราว์เซอร์ไม่รองรับตัวอ่าน PDF';
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', function () {
+    queueRender(pageNum - 1);
+  });
+  document.getElementById('btn-next').addEventListener('click', function () {
+    queueRender(pageNum + 1);
+  });
+
+  document.getElementById('zoom-in').addEventListener('click', function () {
+    userZoomMul = Math.min(2.8, userZoomMul + 0.12);
+    renderPage(pageNum);
+  });
+  document.getElementById('zoom-out').addEventListener('click', function () {
+    userZoomMul = Math.max(0.5, userZoomMul - 0.12);
+    renderPage(pageNum);
+  });
+  document.getElementById('zoom-reset').addEventListener('click', function () {
+    userZoomMul = 1;
+    renderPage(pageNum);
+  });
+
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { if (pdfDoc) renderPage(pageNum); }, 150);
+  });
+
+  var stage = document.getElementById('ebook-stage');
+  var fsBtn = document.getElementById('btn-fullscreen');
+  fsBtn.addEventListener('click', function () {
+    if (!document.fullscreenElement) {
+      (stage.requestFullscreen || stage.webkitRequestFullscreen || function () {}).call(stage);
+    } else {
+      document.exitFullscreen();
+    }
+    setTimeout(function () { if (pdfDoc) renderPage(pageNum); }, 250);
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (pdfDoc) setTimeout(function () { renderPage(pageNum); }, 100);
+  });
+})();
+</script>
+{% else %}
+<script>
+(function () {
+  var pages = document.querySelectorAll('.text-page');
+  var idx = 0;
+  var z = 1;
+
+  function show(i) {
+    if (i < 0 || i >= pages.length) return;
+    idx = i;
+    pages.forEach(function (el, j) {
+      el.classList.toggle('d-none', j !== idx);
+    });
+    document.getElementById('text-page-num').textContent = idx + 1;
+    var nextBtn = document.getElementById('text-next');
+    if (nextBtn) nextBtn.disabled = idx >= pages.length - 1;
+  }
+
+  show(0);
+
+  document.getElementById('text-prev').addEventListener('click', function () { show(idx - 1); });
+  document.getElementById('text-next').addEventListener('click', function () { show(idx + 1); });
+
+  function applyZoom() {
+    pages.forEach(function (el) {
+      el.style.transform = 'scale(' + z + ')';
+    });
+  }
+  document.getElementById('zoom-in').addEventListener('click', function () {
+    z = Math.min(1.8, z + 0.1);
+    applyZoom();
+  });
+  document.getElementById('zoom-out').addEventListener('click', function () {
+    z = Math.max(0.75, z - 0.1);
+    applyZoom();
+  });
+  document.getElementById('zoom-reset').addEventListener('click', function () {
+    z = 1;
+    applyZoom();
+  });
+
+  var stage = document.getElementById('ebook-stage');
+  document.getElementById('btn-fullscreen').addEventListener('click', function () {
+    if (!document.fullscreenElement) {
+      (stage.requestFullscreen || stage.webkitRequestFullscreen || function () {}).call(stage);
+    } else {
+      document.exitFullscreen();
+    }
+  });
+  document.addEventListener('fullscreenchange', function () { applyZoom(); });
+})();
+</script>
+{% endif %}
+{% endblock %}
